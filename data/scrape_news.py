@@ -53,7 +53,26 @@ def get_soup(link:str):
 
     return soup    
 
+def get_links(path:str):
+    if path[-1] != '/':
+        path = path + '/'
+    files = os.listdir(path)
+    files = list(map(lambda x: path + x, files))
+    links = []
+
+    for file in files:
+        with open(file, 'r') as f:
+            link_file = f.readlines()
+            for link in link_file:
+                if link not in links:
+                    links.append(link)
+            f.close()
+
+    return links
+
+
 def scrape_ekantipur():
+    links_ekantipur = get_links("data/ekantipur_links/")
     for link in links_ekantipur:
         req = urlopen(link)
         soup = BeautifulSoup(req.read().decode("utf-8"), "html.parser")
@@ -63,13 +82,17 @@ def scrape_ekantipur():
         contents_list = body.find_all("div", attrs={"class": "sub-headline"})
 
         # get all the paragraphs
-        contents_list.extend(soup.find("div", attrs={"class": "current-news-block"}).find_all("p"))
+        news_block = soup.find("div", attrs={"class": "current-news-block"})
+        if news_block:
+            contents_list.extend(soup.find("div", attrs={"class": "current-news-block"}).find_all("p"))
+        else:
+            continue
 
         content = "".join([content_tag.text for content_tag in contents_list])
-        
+        link = link.strip()
         with open(FILE_NAME, 'a') as f:
-            csv_writer = csv.writer(f)
-            csv_writer.writerow([0, title, link, content])
+            csv_writer = csv.writer(f, delimiter=";", quotechar='|')
+            csv_writer.writerow([title, link, content])
 
             f.close()
 
@@ -106,4 +129,4 @@ def setup():
 
 
 if __name__ == "__main__":
-    scrape_online_khabar()
+    pass
