@@ -1,8 +1,12 @@
 import os
+from urllib.error import HTTPError
 from urllib.request import urlopen, Request
 from bs4 import BeautifulSoup
 import csv
 import random
+
+from requests import request
+import requests
 
 FILE_NAME = "datasets.csv"
 
@@ -74,8 +78,11 @@ def get_links(path:str):
 def scrape_ekantipur():
     links_ekantipur = get_links("data/ekantipur_links/")
     for link in links_ekantipur:
-        req = urlopen(link)
-        soup = BeautifulSoup(req.read().decode("utf-8"), "html.parser")
+        try:
+            req = requests.get(link.strip())
+        except HTTPError:
+            pass
+        soup = BeautifulSoup(req.text, "html.parser")
         body = soup.find("div", attrs={"class": "article-header"})
         title = body.find("h1").text
         # get sub heading of the news as the body 
